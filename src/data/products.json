@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "Stainless Steel Kettle",
+    "price": 29.99,
+    "image": "/images/kettle.jpg"
+  },
+  {
+    "id": 2,
+    "name": "Non-stick Pan",
+    "price": 24.99,
+    "image": "/images/pan.jpg"
+  },
+  {
+    "id": 3,
+    "name": "Silicone Spatula",
+    "price": 9.99,
+    "image": "/images/spatula.jpg"
+  },
+  {
+    "id": 4,
+    "name": "Wooden Cutting Board",
+    "price": 19.99,
+    "image": "/images/cutting_board.jpg"
+  },
+  {
+    "id": 5,
+    "name": "Chef's Knife",
+    "price": 49.99,
+    "image": "/images/chefs_knife.jpg"
+  },
+  {
+    "id": 6,
+    "name": "Measuring Cups Set",
+    "price": 14.99,
+    "image": "/images/measuring_cups.jpg"
+  }
+]
