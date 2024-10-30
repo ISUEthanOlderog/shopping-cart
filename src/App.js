@@ -5,13 +5,9 @@ import CartView from './components/CartView';
 import ConfirmationView from './components/ConfirmationView';
 
 function App() {
-  // Manage current view: 'browse', 'cart', 'confirmation'
   const [currentView, setCurrentView] = useState('browse');
-
-  // Data to pass to confirmation view
   const [orderData, setOrderData] = useState(null);
 
-  // Handlers to switch views
   const goToBrowse = () => setCurrentView('browse');
   const goToCart = () => setCurrentView('cart');
   const goToConfirmation = (data) => {

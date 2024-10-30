@@ -1,18 +1,15 @@
-// src/context/CartContext.js
 import React, { createContext, useState } from 'react';
 
-// Create the CartContext
 export const CartContext = createContext();
 
-// Create the CartProvider component
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState({}); // { productId: quantity }
+  const [cart, setCart] = useState({}); 
 
   // Add item to cart
   const addToCart = (productId) => {
     setCart((prevCart) => ({
       ...prevCart,
-      [productId]: prevCart[productId] ? prevCart[productId] + 1 : 1
+      [productId]: prevCart[productId] ? prevCart[productId] + 1 : 1,
     }));
   };
 

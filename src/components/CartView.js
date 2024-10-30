@@ -1,10 +1,11 @@
 // src/components/CartView.js
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { CartContext } from '../context/CartContext';
-import productsData from '../data/products.json';
 
 const CartView = ({ onReturn, onOrder }) => {
   const { cart, clearCart } = useContext(CartContext);
+  const [catalog, setCatalog] = useState([]);
+  const [cartItems, setCartItems] = useState([]);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -13,12 +14,45 @@ const CartView = ({ onReturn, onOrder }) => {
     address2: '',
     city: '',
     state: '',
-    zip: ''
+    zip: '',
   });
-
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   const TAX_RATE = 0.07; // 7% tax
+
+  // Fetch product catalog from the API
+  useEffect(() => {
+    const fetchCatalog = async () => {
+      try {
+        const response = await fetch('https://fakestoreapi.com/products');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setCatalog(data);
+      } catch (err) {
+        console.error('Error fetching catalog:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCatalog();
+  }, []);
+
+  // Prepare cart items with product details
+  useEffect(() => {
+    const items = Object.entries(cart).map(([productId, quantity]) => {
+      const product = catalog.find((p) => p.id === parseInt(productId));
+      return product ? { ...product, quantity } : null;
+    });
+    setCartItems(items.filter((item) => item !== null));
+  }, [cart, catalog]);
+
+  // Calculate totals
+  const total = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const tax = total * TAX_RATE;
+  const grandTotal = total + tax;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,20 +76,11 @@ const CartView = ({ onReturn, onOrder }) => {
   const handleOrder = (e) => {
     e.preventDefault();
     if (validate()) {
-      // Prepare order data
-      const orderedItems = Object.entries(cart).map(([productId, quantity]) => {
-        const product = productsData.find((p) => p.id === parseInt(productId));
-        return { ...product, quantity };
-      });
-      const total = orderedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-      const tax = total * TAX_RATE;
-      const grandTotal = total + tax;
-
       // Mask card number (show last 4 digits)
       const maskedCard = '**** **** **** ' + formData.cardNumber.slice(-4);
 
       const orderInfo = {
-        items: orderedItems,
+        items: cartItems,
         total: total.toFixed(2),
         tax: tax.toFixed(2),
         grandTotal: grandTotal.toFixed(2),
@@ -67,8 +92,8 @@ const CartView = ({ onReturn, onOrder }) => {
           address2: formData.address2,
           city: formData.city,
           state: formData.state,
-          zip: formData.zip
-        }
+          zip: formData.zip,
+        },
       };
 
       clearCart();
@@ -76,15 +101,15 @@ const CartView = ({ onReturn, onOrder }) => {
     }
   };
 
-  // Prepare cart items
-  const cartItems = Object.entries(cart).map(([productId, quantity]) => {
-    const product = productsData.find((p) => p.id === parseInt(productId));
-    return { ...product, quantity };
-  });
-
-  const total = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const tax = total * TAX_RATE;
-  const grandTotal = total + tax;
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center my-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading cart...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -105,7 +130,7 @@ const CartView = ({ onReturn, onOrder }) => {
             <tbody>
               {cartItems.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.name}</td>
+                  <td>{item.title}</td>
                   <td>{item.quantity}</td>
                   <td>${item.price.toFixed(2)}</td>
                   <td>${(item.price * item.quantity).toFixed(2)}</td>
@@ -117,12 +142,16 @@ const CartView = ({ onReturn, onOrder }) => {
             <h4>Summary</h4>
             <p>Total: ${total.toFixed(2)}</p>
             <p>Tax (7%): ${tax.toFixed(2)}</p>
-            <p><strong>Grand Total: ${grandTotal.toFixed(2)}</strong></p>
+            <p>
+              <strong>Grand Total: ${grandTotal.toFixed(2)}</strong>
+            </p>
           </div>
           <h4>Payment Information</h4>
           <form onSubmit={handleOrder} noValidate>
             <div className="mb-3">
-              <label htmlFor="fullName" className="form-label">Full Name*</label>
+              <label htmlFor="fullName" className="form-label">
+                Full Name*
+              </label>
               <input
                 type="text"
                 className={`form-control ${errors.fullName ? 'is-invalid' : ''}`}
@@ -134,7 +163,9 @@ const CartView = ({ onReturn, onOrder }) => {
               {errors.fullName && <div className="invalid-feedback">{errors.fullName}</div>}
             </div>
             <div className="mb-3">
-              <label htmlFor="email" className="form-label">Email*</label>
+              <label htmlFor="email" className="form-label">
+                Email*
+              </label>
               <input
                 type="email"
                 className={`form-control ${errors.email ? 'is-invalid' : ''}`}
@@ -146,7 +177,9 @@ const CartView = ({ onReturn, onOrder }) => {
               {errors.email && <div className="invalid-feedback">{errors.email}</div>}
             </div>
             <div className="mb-3">
-              <label htmlFor="cardNumber" className="form-label">Card Number*</label>
+              <label htmlFor="cardNumber" className="form-label">
+                Card Number*
+              </label>
               <input
                 type="text"
                 className={`form-control ${errors.cardNumber ? 'is-invalid' : ''}`}
@@ -159,7 +192,9 @@ const CartView = ({ onReturn, onOrder }) => {
               {errors.cardNumber && <div className="invalid-feedback">{errors.cardNumber}</div>}
             </div>
             <div className="mb-3">
-              <label htmlFor="address1" className="form-label">Address Line 1*</label>
+              <label htmlFor="address1" className="form-label">
+                Address Line 1*
+              </label>
               <input
                 type="text"
                 className={`form-control ${errors.address1 ? 'is-invalid' : ''}`}
@@ -171,7 +206,9 @@ const CartView = ({ onReturn, onOrder }) => {
               {errors.address1 && <div className="invalid-feedback">{errors.address1}</div>}
             </div>
             <div className="mb-3">
-              <label htmlFor="address2" className="form-label">Address Line 2</label>
+              <label htmlFor="address2" className="form-label">
+                Address Line 2
+              </label>
               <input
                 type="text"
                 className="form-control"
@@ -183,7 +220,9 @@ const CartView = ({ onReturn, onOrder }) => {
             </div>
             <div className="row">
               <div className="col-md-4 mb-3">
-                <label htmlFor="city" className="form-label">City*</label>
+                <label htmlFor="city" className="form-label">
+                  City*
+                </label>
                 <input
                   type="text"
                   className={`form-control ${errors.city ? 'is-invalid' : ''}`}
@@ -195,7 +234,9 @@ const CartView = ({ onReturn, onOrder }) => {
                 {errors.city && <div className="invalid-feedback">{errors.city}</div>}
               </div>
               <div className="col-md-4 mb-3">
-                <label htmlFor="state" className="form-label">State*</label>
+                <label htmlFor="state" className="form-label">
+                  State*
+                </label>
                 <input
                   type="text"
                   className={`form-control ${errors.state ? 'is-invalid' : ''}`}
@@ -207,7 +248,9 @@ const CartView = ({ onReturn, onOrder }) => {
                 {errors.state && <div className="invalid-feedback">{errors.state}</div>}
               </div>
               <div className="col-md-4 mb-3">
-                <label htmlFor="zip" className="form-label">ZIP Code*</label>
+                <label htmlFor="zip" className="form-label">
+                  ZIP Code*
+                </label>
                 <input
                   type="text"
                   className={`form-control ${errors.zip ? 'is-invalid' : ''}`}
@@ -220,7 +263,9 @@ const CartView = ({ onReturn, onOrder }) => {
                 {errors.zip && <div className="invalid-feedback">{errors.zip}</div>}
               </div>
             </div>
-            <button type="submit" className="btn btn-success">Order</button>
+            <button type="submit" className="btn btn-success">
+              Order
+            </button>
             <button type="button" className="btn btn-secondary ms-2" onClick={onReturn}>
               Return
             </button>

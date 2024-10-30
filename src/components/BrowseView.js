@@ -1,21 +1,56 @@
 // src/components/BrowseView.js
 import React, { useState, useEffect } from 'react';
 import ItemCard from './ItemCard';
-import productsData from '../data/products.json';
 
 const BrowseView = ({ onCheckout }) => {
+  const [catalog, setCatalog] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState(productsData);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('https://fakestoreapi.com/products');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setCatalog(data);
+        setFilteredProducts(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const lowercasedFilter = searchTerm.toLowerCase();
-    const filtered = productsData.filter((product) =>
-      product.name.toLowerCase().includes(lowercasedFilter)
+    const filtered = catalog.filter((product) =>
+      product.title.toLowerCase().includes(lowercasedFilter)
     );
     setFilteredProducts(filtered);
-  }, [searchTerm]);
+  }, [searchTerm, catalog]);
 
   const clearSearch = () => setSearchTerm('');
+
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center my-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading products...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div>Error fetching products: {error}</div>;
+  }
 
   return (
     <div>

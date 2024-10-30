@@ -11,11 +11,11 @@ const ItemCard = ({ product }) => {
       <img
         src={product.image}
         className="card-img-top"
-        alt={product.name}
-        style={{ objectFit: 'cover', height: '200px' }}
+        alt={product.title}
+        style={{ objectFit: 'contain', height: '200px' }}
       />
       <div className="card-body d-flex flex-column">
-        <h5 className="card-title">{product.name}</h5>
+        <h5 className="card-title">{product.title}</h5>
         <p className="card-text">${product.price.toFixed(2)}</p>
         <div className="mt-auto d-flex align-items-center">
           <button
